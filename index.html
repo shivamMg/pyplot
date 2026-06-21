@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pyplot</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: start center;
+      padding: 48px 16px;
+      box-sizing: border-box;
+    }
+
+    main {
+      width: min(960px, 100%);
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+      padding: 32px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      letter-spacing: -0.05em;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: #475569;
+    }
+
+    form {
+      display: grid;
+      gap: 16px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-weight: 650;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      box-sizing: border-box;
+    }
+
+    input:focus {
+      border-color: #2563eb;
+      outline: 3px solid rgba(37, 99, 235, 0.15);
+    }
+
+    .range {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    button {
+      justify-self: start;
+      border: 0;
+      border-radius: 999px;
+      background: #2563eb;
+      color: #ffffff;
+      padding: 12px 22px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    #message {
+      margin-top: 18px;
+      min-height: 24px;
+      color: #dc2626;
+      font-weight: 650;
+    }
+
+    #result {
+      margin-top: 24px;
+      display: none;
+      gap: 14px;
+    }
+
+    #plot {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: #ffffff;
+    }
+
+    #details {
+      margin: 0;
+      color: #475569;
+      font-size: 0.95rem;
+    }
+
+    .help {
+      margin: 20px 0 24px;
+      padding: 18px;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: #f8fafc;
+    }
+
+    .help summary {
+      cursor: pointer;
+      font-weight: 750;
+      color: #1e293b;
+    }
+
+    .help summary:focus {
+      outline: 3px solid rgba(37, 99, 235, 0.15);
+      border-radius: 8px;
+    }
+
+    .help[open] summary {
+      margin-bottom: 10px;
+    }
+
+    .help summary::marker {
+      color: #2563eb;
+    }
+
+    .help summary::-webkit-details-marker {
+      color: #2563eb;
+    }
+
+    .help code {
+      font-size: 1rem;
+    }
+
+    .help p {
+      margin: 8px 0;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .chips code {
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      background: #ffffff;
+      padding: 4px 9px;
+      color: #1e293b;
+    }
+
+    @media (max-width: 700px) {
+      main {
+        padding: 24px;
+      }
+
+      .range {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Pyplot</h1>
+    <p>Enter a Python expression in <strong>x</strong>. Try <code>3*x**2+2*x-1</code> or <code>sin(x)-cos(x)</code>.</p>
+
+    <details class="help">
+      <summary>Allowed functions and constants</summary>
+      <p>Use <code>x</code>, numbers, arithmetic operators, and these functions:</p>
+      <div class="chips" aria-label="Allowed functions">
+        <code>abs</code><code>absolute</code><code>acos</code><code>arccos</code><code>arcsin</code><code>arctan</code><code>arctan2</code><code>asin</code><code>atan</code><code>atan2</code><code>ceil</code><code>cos</code><code>cosh</code><code>degrees</code><code>exp</code><code>floor</code><code>log</code><code>log10</code><code>log2</code><code>maximum</code><code>minimum</code><code>radians</code><code>round</code><code>sin</code><code>sinh</code><code>sqrt</code><code>tan</code><code>tanh</code>
+      </div>
+      <p>Constants:</p>
+      <div class="chips" aria-label="Allowed constants">
+        <code>e</code><code>pi</code>
+      </div>
+    </details>
+
+    <form id="plot-form">
+      <label>
+        Expression
+        <input id="expression" name="expression" value="sin(x)-cos(x)" autocomplete="off" required>
+      </label>
+
+      <div class="range">
+        <label>
+          Start
+          <input id="start" name="start" type="number" step="any" placeholder="-10">
+        </label>
+        <label>
+          End
+          <input id="end" name="end" type="number" step="any" placeholder="10">
+        </label>
+        <label>
+          Step
+          <input id="step" name="step" type="number" step="any" min="0" placeholder="0.1">
+        </label>
+      </div>
+
+      <button id="submit" type="submit">Plot</button>
+    </form>
+
+    <div id="message" role="status" aria-live="polite"></div>
+
+    <section id="result" aria-label="Plot result">
+      <img id="plot" alt="Generated plot">
+      <p id="details"></p>
+    </section>
+  </main>
+
+  <script>
+    const form = document.querySelector("#plot-form");
+    const button = document.querySelector("#submit");
+    const message = document.querySelector("#message");
+    const result = document.querySelector("#result");
+    const plot = document.querySelector("#plot");
+    const details = document.querySelector("#details");
+
+    function valueOrNull(id) {
+      const value = document.querySelector(id).value.trim();
+      return value === "" ? null : value;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      button.disabled = true;
+      message.textContent = "Plotting...";
+      result.style.display = "none";
+
+      try {
+        const response = await fetch("/api/plot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            expression: valueOrNull("#expression"),
+            start: valueOrNull("#start"),
+            end: valueOrNull("#end"),
+            step: valueOrNull("#step")
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Unable to plot expression");
+        }
+
+        plot.src = `data:${data.mimeType};base64,${data.imageBase64}`;
+        details.textContent = `${data.expression} over ${data.range.start} to ${data.range.actualEnd} with ${data.range.points} points (${data.finitePoints} finite).`;
+        result.style.display = "grid";
+        message.textContent = "";
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
