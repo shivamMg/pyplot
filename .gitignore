@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .python_packages/
 pyplot.zip
+local.settings.json

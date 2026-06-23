@@ -4,6 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pyplot</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [["\\(", "\\)"]] },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
   <style>
     :root {
       color-scheme: light;
@@ -116,6 +123,78 @@
       font-size: 0.95rem;
     }
 
+    #equation {
+      margin: 4px 0 6px;
+      text-align: center;
+      font-size: 1.35rem;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+
+    #properties {
+      display: grid;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .group {
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: #f8fafc;
+      padding: 16px 18px;
+    }
+
+    .group h3 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .group h3 .badge {
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .prop {
+      display: grid;
+      gap: 4px;
+      padding: 10px 0;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .prop:first-of-type {
+      border-top: 0;
+    }
+
+    .prop-label {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .prop-desc {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    .prop-value {
+      margin-top: 2px;
+      padding: 8px 12px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow-x: auto;
+    }
+
     .help {
       margin: 20px 0 24px;
       padding: 18px;
@@ -225,8 +304,10 @@
     <div id="message" role="status" aria-live="polite"></div>
 
     <section id="result" aria-label="Plot result">
+      <div id="equation" aria-label="Equation"></div>
       <img id="plot" alt="Generated plot">
       <p id="details"></p>
+      <div id="properties" aria-label="Equation properties"></div>
     </section>
   </main>
 
@@ -237,10 +318,63 @@
     const result = document.querySelector("#result");
     const plot = document.querySelector("#plot");
     const details = document.querySelector("#details");
+    const equation = document.querySelector("#equation");
+    const properties = document.querySelector("#properties");
 
     function valueOrNull(id) {
       const value = document.querySelector(id).value.trim();
       return value === "" ? null : value;
+    }
+
+    function renderProperties(analysis) {
+      properties.innerHTML = "";
+      if (!analysis || !Array.isArray(analysis.groups)) {
+        return;
+      }
+      for (const group of analysis.groups) {
+        if (!group.properties || group.properties.length === 0) {
+          continue;
+        }
+        const section = document.createElement("section");
+        section.className = "group";
+
+        const heading = document.createElement("h3");
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = group.id;
+        heading.append(badge, document.createTextNode(group.title));
+        section.appendChild(heading);
+
+        for (const prop of group.properties) {
+          const row = document.createElement("div");
+          row.className = "prop";
+
+          const label = document.createElement("div");
+          label.className = "prop-label";
+          label.textContent = prop.label;
+
+          const desc = document.createElement("div");
+          desc.className = "prop-desc";
+          desc.textContent = prop.description;
+
+          const value = document.createElement("div");
+          value.className = "prop-value";
+          value.textContent = prop.latex ? `\\(${prop.latex}\\)` : prop.value;
+
+          row.append(label, desc, value);
+          section.appendChild(row);
+        }
+        properties.appendChild(section);
+      }
+    }
+
+    function typeset() {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        if (window.MathJax.typesetClear) {
+          window.MathJax.typesetClear([equation, properties]);
+        }
+        window.MathJax.typesetPromise([equation, properties]).catch(() => {});
+      }
     }
 
     form.addEventListener("submit", async (event) => {
@@ -268,8 +402,12 @@
 
         plot.src = `data:${data.mimeType};base64,${data.imageBase64}`;
         details.textContent = `${data.expression} over ${data.range.start} to ${data.range.actualEnd} with ${data.range.points} points (${data.finitePoints} finite).`;
+        const latexEquation = data.latexEquation || `y = ${data.expression}`;
+        equation.textContent = `\\(${latexEquation}\\)`;
+        renderProperties(data.analysis);
         result.style.display = "grid";
         message.textContent = "";
+        typeset();
       } catch (error) {
         message.textContent = error.message;
       } finally {

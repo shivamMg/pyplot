@@ -1,6 +1,6 @@
 # Pyplot
 
-Simple Azure Functions app that plots safe Python expressions of `x` with NumPy and Matplotlib.
+Simple web app that plots and analyzes an equation in `x` with NumPy, Matplotlib and SymPy.
 
 Allowed functions: `abs`, `absolute`, `acos`, `arccos`, `arcsin`, `arctan`, `arctan2`, `asin`, `atan`, `atan2`, `ceil`, `cos`, `cosh`, `degrees`, `exp`, `floor`, `log`, `log10`, `log2`, `maximum`, `minimum`, `radians`, `round`, `sin`, `sinh`, `sqrt`, `tan`, `tanh`.
 
